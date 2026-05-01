@@ -7,7 +7,7 @@ from backend import services
 from backend.classes import goal, personality, habits, streaks
 from backend.routes import goal
 
-ctk.set_appearance_mode("Dark")
+ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 
 
@@ -29,14 +29,10 @@ class App(ctk.CTk):
         self.grid_columnconfigure(0, weight=1)
 
         goals_tab = self.tabs.add("Goals")
-        personality_tab = self.tabs.add("Personality")
-        habits_tab = self.tabs.add("Habits")
         streaks_tab = self.tabs.add("Streaks")
 
         # Build each tab UI
         self.build_goals_tab(goals_tab)
-        self.build_personality_tab(personality_tab)
-        self.build_habits_tab(habits_tab)
         self.build_streaks_tab(streaks_tab)
 
         self.refresh()
@@ -47,7 +43,7 @@ class App(ctk.CTk):
         due = self.date_entry.get()
 
         try:
-            services.create_goal(loc, due, act)
+            goal.add_goal(loc, due, act)
         except ValueError as e:
             messagebox.showwarning("Invalid", str(e))
             return
@@ -91,14 +87,14 @@ class App(ctk.CTk):
     def toggle_complete(self, goal_id, var):
         try:
             if var.get():
-                services.complete_goal(goal_id)
+                goal.set_goal_completed(goal_id, True)
             else:
-                services.uncomplete_goal(goal_id)
+                goal.set_goal_completed(goal_id, False)
         finally:
             self.refresh()
 
     def delete_goal(self, goal_id):
-        services.remove_goal(goal_id)
+        goal.remove_goal(goal_id)
         self.refresh()
 
     def build_goals_tab(self, parent):
@@ -155,26 +151,26 @@ class App(ctk.CTk):
 
         self.rows = []  # store tuples: (goal_id, completed_var, row_frame)
 
-    def build_personality_tab(self, parent):
-        parent.grid_columnconfigure(0, weight=1)
+    # def build_personality_tab(self, parent):
+    #     parent.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(parent, text="Personality", font=ctk.CTkFont(size=22, weight="bold")).grid(
-            row=0, column=0, sticky="w", padx=8, pady=(8, 4)
-        )
+    #     ctk.CTkLabel(parent, text="Personality", font=ctk.CTkFont(size=22, weight="bold")).grid(
+    #         row=0, column=0, sticky="w", padx=8, pady=(8, 4)
+    #     )
 
-        ctk.CTkLabel(parent, text="Put your personality tracker/settings here.").grid(
-            row=1, column=0, sticky="w", padx=8, pady=4
-        )
+    #     ctk.CTkLabel(parent, text="Put your personality tracker/settings here.").grid(
+    #         row=1, column=0, sticky="w", padx=8, pady=4
+    #     )
 
-        # Example input
-        self.personality_entry = ctk.CTkEntry(
-            parent, placeholder_text="e.g., 'Be consistent', 'Be calm'")
-        self.personality_entry.grid(
-            row=2, column=0, sticky="ew", padx=8, pady=8)
+    #     # Example input
+    #     self.personality_entry = ctk.CTkEntry(
+    #         parent, placeholder_text="e.g., 'Be consistent', 'Be calm'")
+    #     self.personality_entry.grid(
+    #         row=2, column=0, sticky="ew", padx=8, pady=8)
 
-        ctk.CTkButton(parent, text="Save", command=lambda: print(self.personality_entry.get())).grid(
-            row=3, column=0, sticky="w", padx=8, pady=8
-        )
+    #     ctk.CTkButton(parent, text="Save", command=lambda: print(self.personality_entry.get())).grid(
+    #         row=3, column=0, sticky="w", padx=8, pady=8
+    #     )
 
     def build_habits_tab(self, parent):
         parent.grid_columnconfigure(0, weight=1)
