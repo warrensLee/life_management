@@ -11,7 +11,7 @@ def add_goal(location: str, due: date, action: str) -> int:
     with get_conn() as conn:
         cur = conn.execute(
             "INSERT INTO goals(location, due, action, completed) VALUES(?,?,?,0)",
-            (location, due.isoformat(), action),
+            (location, due, action),
         )
         conn.commit()
         return cur.lastrowid

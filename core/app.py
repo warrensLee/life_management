@@ -1,6 +1,8 @@
 # app.py
 import customtkinter as ctk
 from tkinter import messagebox
+from datetime import date
+import traceback
 
 from backend import database
 from backend import services
@@ -8,7 +10,7 @@ from backend.classes import goal, personality, habits, streaks
 from backend.routes import goal
 
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("dark-blue")
+ctk.set_default_color_theme("core/app_theme.json")
 
 
 class App(ctk.CTk):
@@ -43,12 +45,15 @@ class App(ctk.CTk):
         due = self.date_entry.get()
 
         try:
+            due = date.fromisoformat(due)
             goal.add_goal(loc, due, act)
         except ValueError as e:
             messagebox.showwarning("Invalid", str(e))
             return
-        except Exception:
-            messagebox.showwarning("Invalid", "Date must be YYYY-MM-DD.")
+        except Exception as e:
+            print("Error while adding goal:", e)
+            traceback.print_exc()
+            messagebox.showwarning("Invalid", str(e))
             return
 
         self.location_entry.delete(0, "end")
@@ -151,34 +156,54 @@ class App(ctk.CTk):
 
         self.rows = []  # store tuples: (goal_id, completed_var, row_frame)
 
-    # def build_personality_tab(self, parent):
-    #     parent.grid_columnconfigure(0, weight=1)
-
-    #     ctk.CTkLabel(parent, text="Personality", font=ctk.CTkFont(size=22, weight="bold")).grid(
-    #         row=0, column=0, sticky="w", padx=8, pady=(8, 4)
-    #     )
-
-    #     ctk.CTkLabel(parent, text="Put your personality tracker/settings here.").grid(
-    #         row=1, column=0, sticky="w", padx=8, pady=4
-    #     )
-
-    #     # Example input
-    #     self.personality_entry = ctk.CTkEntry(
-    #         parent, placeholder_text="e.g., 'Be consistent', 'Be calm'")
-    #     self.personality_entry.grid(
-    #         row=2, column=0, sticky="ew", padx=8, pady=8)
-
-    #     ctk.CTkButton(parent, text="Save", command=lambda: print(self.personality_entry.get())).grid(
-    #         row=3, column=0, sticky="w", padx=8, pady=8
-    #     )
-
-    def build_habits_tab(self, parent):
-        parent.grid_columnconfigure(0, weight=1)
-        pass
-
     def build_streaks_tab(self, parent):
         parent.grid_columnconfigure(0, weight=1)
-        pass
+        parent.grid_rowconfigure(1, weight=1)
+        # Top input panel
+        top = ctk.CTkFrame(parent)
+        top.grid(row=0, column=0, padx=16, pady=16, sticky="ew")
+        for i in range(6):
+            top.grid_columnconfigure(i, weight=1)
+
+        self.font_title = ctk.CTkFont(size=18, weight="bold")
+        self.font_label = ctk.CTkFont(size=14)
+        self.font_entry = ctk.CTkFont(size=14)
+        self.font_button = ctk.CTkFont(size=14, weight="bold")
+        self.goal_font_active = ctk.CTkFont(size=15, weight="normal")
+        self.goal_font_completed = ctk.CTkFont(size=14, slant="italic")
+
+        ctk.CTkLabel(top, text="Action / Behavior", font=self.font_title).grid(
+            row=0, column=0, padx=10, pady=(10, 0), sticky="w")
+        ctk.CTkLabel(top, text="Location", font=self.font_title).grid(
+            row=0, column=1, padx=10, pady=(10, 0), sticky="w")
+        ctk.CTkLabel(top, text="Date (YYYY-MM-DD)", font=self.font_title).grid(
+            row=0, column=2, padx=10, pady=(10, 0), sticky="w")
+
+        self.action_entry = ctk.CTkEntry(top, placeholder_text="Run 2 miles")
+        self.action_entry.grid(row=1, column=0, padx=8, pady=10, sticky="ew")
+
+        self.location_entry = ctk.CTkEntry(top, placeholder_text="Gym")
+        self.location_entry.grid(row=1, column=1, padx=8, pady=10, sticky="ew")
+
+        self.date_entry = ctk.CTkEntry(top, placeholder_text="2026-02-01")
+        self.date_entry.grid(row=1, column=2, padx=8, pady=10, sticky="ew")
+
+        add_btn = ctk.CTkButton(top, text="Add Goal", command=self.on_add)
+        add_btn.grid(row=1, column=3, padx=8, pady=10, sticky="ew")
+
+        refresh_btn = ctk.CTkButton(top, text="Refresh", command=self.refresh)
+        refresh_btn.grid(row=1, column=4, padx=8, pady=10, sticky="ew")
+
+        # Scrollable goals list
+        mid = ctk.CTkFrame(parent)
+        mid.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="nsew")
+        mid.grid_columnconfigure(0, weight=1)
+        mid.grid_rowconfigure(0, weight=1)
+
+        self.list_frame = ctk.CTkScrollableFrame(mid)
+        self.list_frame.grid(row=0, column=0, padx=12, pady=12, sticky="nsew")
+
+        self.rows = []  # store tuples: (goal_id, completed_var, row_frame)
 
 def run():
     App().mainloop()
