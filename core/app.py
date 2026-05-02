@@ -106,7 +106,7 @@ class App(ctk.CTk):
 
             done_var = ctk.BooleanVar(value=g.completed)
             chk = ctk.CTkCheckBox(row, text="", variable=done_var,
-                                  command=lambda gid=g.id, v=done_var: self.toggle_complete(gid, v))
+                                  command=lambda gid=g.id, v=done_var: self.toggle_goal_complete(gid, v))
             chk.pack(side="left", padx=(10, 6))
 
             lbl = ctk.CTkLabel(row, text=g.display(), anchor="w", font=self.goal_font_completed if g.completed
@@ -133,7 +133,7 @@ class App(ctk.CTk):
 
             done_var = ctk.BooleanVar(value=s.completed)
             chk = ctk.CTkCheckBox(row, text="", variable=done_var,
-                                  command=lambda sid=s.id, v=done_var: self.toggle_complete(sid, v))
+                                  command=lambda sid=s.id, v=done_var: self.toggle_streak_complete(sid, v))
             chk.pack(side="left", padx=(10, 6))
 
             lbl = ctk.CTkLabel(row, text=s.display(), anchor="w", font=self.streak_font_completed if s.completed
@@ -151,12 +151,19 @@ class App(ctk.CTk):
         self.goal_refresh()
         self.streak_refresh()  # TODO: implement streak refresh similar to goal_refresh
 
-    def toggle_complete(self, goal_id, var):
+    def toggle_goal_complete(self, goal_id, var):
         try:
             if var.get():
                 goal.set_goal_completed(goal_id, True)
             else:
                 goal.set_goal_completed(goal_id, False)
+        finally:
+            self.refresh()
+
+    def toggle_streak_complete(self, streak_id, var):
+        try:
+            if var.get():
+                streaks.increment_streak(streak_id)
         finally:
             self.refresh()
 
