@@ -1,43 +1,69 @@
-from datetime import date
+from datetime import date, time
 
 from backend.database import get_conn
 from backend.classes.streaks import Streak
-from backend.services import parse_due_date
 
 
 ''' ------------------------------- helper streaks methods ------------------------------- '''
 
-def add_streaks(location: str, due: date, action: str) -> int:
+
+def add_streak(title: str, desc: str, days: int, due: date) -> int:
     with get_conn() as conn:
         cur = conn.execute(
-            "INSERT INTO streaks(location, due, action, completed) VALUES(?,?,?,0)",
-            (location, due.isoformat(), action),
+            """
+            INSERT INTO streaks(title, description, days_completed, due)
+            VALUES (?, ?, ?, ?)
+            """,
+            (title, desc, days, due),
         )
         conn.commit()
         return cur.lastrowid
 
-
 def list_streaks(include_completed=True) -> list[Streak]:
-    q = "SELECT id, location, due, action, completed FROM streaks"
-    params = ()
+    q = """
+        SELECT id, title, description,
+               created_at, updated_at, ended_at,
+               completed, days_completed
+        FROM streaks
+    """
+
     if not include_completed:
         q += " WHERE completed = 0"
-    q += " ORDER BY due ASC, id DESC"
+
+    q += " ORDER BY id DESC"
 
     with get_conn() as conn:
-        rows = conn.execute(q, params).fetchall()
+        rows = conn.execute(q).fetchall()
 
     out = []
-    for gid, loc, due_str, act, comp in rows:
-        y, m, d = map(int, due_str.split("-"))
-        out.append(Streak(gid, loc, date(y, m, d), act, bool(comp)))
+
+    for row in rows:
+        sid, title, desc, created_at, updated_at, ended_at, completed, days_completed = row
+
+        out.append(
+            Streak(
+                id=sid,
+                title=title,
+                description=desc,
+                created_at=date.fromisoformat(created_at[:10]),
+                updated_at=date.fromisoformat(updated_at[:10]),
+                ended_at=date.fromisoformat(ended_at[:10]) if ended_at else None,
+                completed=completed,
+                days_completed=days_completed,
+            )
+        )
+
     return out
 
 
 def set_streaks_completed(streaks_id: int, completed: bool):
     with get_conn() as conn:
         conn.execute(
-            "UPDATE streaks SET completed = ?, updated_at = datetime('now') WHERE id = ?",
+            """
+            UPDATE streaks
+            SET completed = ?, updated_at = datetime('now')
+            WHERE id = ?
+            """,
             (1 if completed else 0, streaks_id),
         )
         conn.commit()
@@ -49,25 +75,28 @@ def delete_streaks(streaks_id: int):
         conn.commit()
 
 
-def update_streaks(streaks_id: int, location: str, due: date, action: str):
+def update_streaks(streaks_id: int, title: str, desc: str):
     with get_conn() as conn:
         conn.execute(
-            "UPDATE streaks SET location = ?, due = ?, action = ?, updated_at = datetime('now') WHERE id = ?",
-            (location, due.isoformat(), action, streaks_id),
+            """
+            UPDATE streaks
+            SET title = ?, description = ?, updated_at = datetime('now')
+            WHERE id = ?
+            """,
+            (title, desc, streaks_id),
         )
         conn.commit()
 
 
-def create_streaks(location: str, due_str: str, action: str) -> int:
-    if not location.strip():
-        raise ValueError("Location is required.")
-    if not action.strip():
-        raise ValueError("Action/behavior is required.")
-    due = parse_due_date(due_str)
-    return add_streaks(location.strip(), due, action.strip())
+def create_streaks(title: str, desc: str) -> int:
+    if not title.strip():
+        raise ValueError("Title is required.")
+
+    return add_streak(title.strip(), desc.strip())
 
 
 ''' ------------------------------- main streaks methods ------------------------------- '''
+
 
 def get_streaks(include_completed=True) -> list[Streak]:
     return list_streaks(include_completed=include_completed)

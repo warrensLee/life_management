@@ -16,17 +16,16 @@ from datetime import date, time
 @dataclass
 class Streak:
     id: int
-    action: str
+    title: str
+    description: str
     created_at: date
     updated_at: date
-    time: time | None
-    location: str | None
     ended_at: date | None = None
-    completed: bool = False
+    completed: int = 0
     days_completed: int = 0
 
     def display(self) -> str:
-        return f"{self.days_completed} | {self.action} | {self.time} | {self.location} | {self.completed}"
+        return f"{self.days_completed} | {self.title} | {self.description} | {self.completed}"
 
     # future possibility of validating behaviors & locations
     def validate(self):

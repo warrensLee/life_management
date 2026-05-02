@@ -39,15 +39,14 @@ def init_db():
         streaks_sql = """       
         CREATE TABLE IF NOT EXISTS streaks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            location TEXT,
             due TEXT NOT NULL,
-            action TEXT NOT NULL,
-            time TEXT,
-            completed INTEGER NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-            ended_at TEXT DEFAULT NULL,
-            days_completed INTEGER NOT NULL DEFAULT 0
+            title TEXT NOT NULL,
+            description TEXT,
+            completed INTEGER DEFAULT 0,
+            days_completed INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            ended_at TEXT
         )
         """
 
