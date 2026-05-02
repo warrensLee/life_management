@@ -2,6 +2,7 @@ from datetime import date, time
 
 from backend.database import get_conn
 from backend.classes.streaks import Streak
+from backend.services import parse_due_date
 
 
 ''' ------------------------------- helper streaks methods ------------------------------- '''
@@ -45,9 +46,9 @@ def list_streaks(include_completed=True) -> list[Streak]:
                 id=sid,
                 title=title,
                 description=desc,
-                created_at=date.fromisoformat(created_at[:10]),
-                updated_at=date.fromisoformat(updated_at[:10]),
-                ended_at=date.fromisoformat(ended_at[:10]) if ended_at else None,
+                created_at=parse_due_date(created_at),
+                updated_at=parse_due_date(updated_at),
+                ended_at=parse_due_date(ended_at) if ended_at else None,
                 completed=completed,
                 days_completed=days_completed,
             )
@@ -69,9 +70,9 @@ def set_streaks_completed(streaks_id: int, completed: bool):
         conn.commit()
 
 
-def delete_streaks(streaks_id: int):
+def delete_streak(streak_id: int):
     with get_conn() as conn:
-        conn.execute("DELETE FROM streaks WHERE id = ?", (streaks_id,))
+        conn.execute("DELETE FROM streaks WHERE id = ?", (streak_id,))
         conn.commit()
 
 
@@ -110,5 +111,5 @@ def uncomplete_streaks(streaks_id: int):
     set_streaks_completed(streaks_id, False)
 
 
-def remove_streaks(streaks_id: int):
-    delete_streaks(streaks_id)
+def remove_streak(streak_id: int):
+    delete_streak(streak_id)

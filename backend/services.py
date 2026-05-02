@@ -1,14 +1,16 @@
 # core/services.py
-from datetime import datetime
+from datetime import datetime, date
 from backend.classes.goal import Goal
 # core/services.py
 from backend import database
 from backend.classes.goal import Goal
-from datetime import datetime
 
 
-def parse_due_date(s: str):
-    return datetime.strptime(s.strip(), "%Y-%m-%d").date()
+def parse_due_date(value):
+    if not value:
+        return None
+
+    return date.fromisoformat(value[:10])
 
 
 def validate_fields(location: str, due_str: str, action: str):

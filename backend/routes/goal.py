@@ -53,7 +53,7 @@ def update_goal(goal_id: int, location: str, due: date, action: str):
     with get_conn() as conn:
         conn.execute(
             "UPDATE goals SET location = ?, due = ?, action = ?, updated_at = datetime('now') WHERE id = ?",
-            (location, due.isoformat(), action, goal_id),
+            (location, parse_due_date(due), action, goal_id),
         )
         conn.commit()
 

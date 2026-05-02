@@ -8,6 +8,8 @@ from backend import database
 from backend import services
 from backend.classes import goal, streaks
 from backend.routes import goal, streaks
+from backend.services import parse_due_date
+
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("core/app_theme.json")
@@ -45,7 +47,7 @@ class App(ctk.CTk):
         due = self.goal_date_entry.get().strip()
 
         try:
-            due = date.fromisoformat(due)
+            due = parse_due_date(due)
             goal.add_goal(loc, due, act)
         except ValueError as e:
             messagebox.showwarning("Invalid", str(e))
@@ -59,6 +61,7 @@ class App(ctk.CTk):
         self.goal_location_entry.delete(0, "end")
         self.goal_date_entry.delete(0, "end")
         self.goal_action_entry.delete(0, "end")
+        self.refresh()
 
     def add_streak(self):
         title = self.streak_title_entry.get().strip()
@@ -67,7 +70,7 @@ class App(ctk.CTk):
         due = self.streak_date_entry.get().strip()
 
         try:
-            due = date.fromisoformat(due)
+            due = parse_due_date(due)
             streaks.add_streak(title, desc, days, due)
         except ValueError as e:
             messagebox.showwarning("Invalid", str(e))
@@ -82,6 +85,7 @@ class App(ctk.CTk):
         self.streak_description_entry.delete(0, "end")
         self.streak_days_entry.delete(0, "end")
         self.streak_date_entry.delete(0, "end")
+        self.refresh()
 
 
     def on_add(self):
@@ -115,6 +119,7 @@ class App(ctk.CTk):
 
             self.goal_rows.append((g.id, done_var, row))
 
+
     def streak_refresh(self):
         # clear existing rows
         for _, _, row in self.streak_rows:
@@ -122,24 +127,24 @@ class App(ctk.CTk):
         self.streak_rows.clear()
 
         all_streaks = streaks.get_streaks(include_completed=self.show_completed.get())
-        for g in all_streaks:
+        for s in all_streaks:
             row = ctk.CTkFrame(self.streak_list_frame)
             row.pack(fill="x", padx=6, pady=6)
 
-            done_var = ctk.BooleanVar(value=g.completed)
+            done_var = ctk.BooleanVar(value=s.completed)
             chk = ctk.CTkCheckBox(row, text="", variable=done_var,
-                                  command=lambda gid=g.id, v=done_var: self.toggle_complete(gid, v))
+                                  command=lambda sid=s.id, v=done_var: self.toggle_complete(sid, v))
             chk.pack(side="left", padx=(10, 6))
 
-            lbl = ctk.CTkLabel(row, text=g.display(), anchor="w", font=self.streak_font_completed if g.completed
-                else self.streak_font_active, text_color="#9ca3af" if g.completed else None)
+            lbl = ctk.CTkLabel(row, text=s.display(), anchor="w", font=self.streak_font_completed if s.completed
+                else self.streak_font_active, text_color="#9ca3af" if s.completed else None)
             lbl.pack(side="left", padx=6, fill="x", expand=True)
 
             del_btn = ctk.CTkButton(
-                row, text="Delete", width=70, command=lambda gid=g.id: self.delete_streak(gid))
+                row, text="Delete", width=70, command=lambda sid=s.id: self.delete_streak(sid))
             del_btn.pack(side="right", padx=10)
 
-            self.streak_rows.append((g.id, done_var, row))
+            self.streak_rows.append((s.id, done_var, row))
     
             
     def refresh(self):
@@ -157,6 +162,10 @@ class App(ctk.CTk):
 
     def delete_goal(self, goal_id):
         goal.remove_goal(goal_id)
+        self.refresh()
+
+    def delete_streak(self, streak_id):
+        streaks.remove_streak(streak_id)
         self.refresh()
 
     def build_goals_tab(self, parent):
@@ -191,7 +200,7 @@ class App(ctk.CTk):
         self.goal_date_entry = ctk.CTkEntry(top, placeholder_text="2026-02-01")
         self.goal_date_entry.grid(row=1, column=2, padx=8, pady=10, sticky="ew")
 
-        add_btn = ctk.CTkButton(top, text="Add Goal", command=self.on_add)
+        add_btn = ctk.CTkButton(top, text="Add Goal", command=self.add_goal)
         add_btn.grid(row=1, column=3, padx=8, pady=10, sticky="ew")
 
         refresh_btn = ctk.CTkButton(top, text="Refresh", command=self.refresh)
@@ -255,7 +264,7 @@ class App(ctk.CTk):
         self.streak_date_entry = ctk.CTkEntry(top, placeholder_text="2026-02-01")
         self.streak_date_entry.grid(row=1, column=3, padx=8, pady=10, sticky="ew")
 
-        add_btn = ctk.CTkButton(top, text="Add Streak", command=self.on_add)
+        add_btn = ctk.CTkButton(top, text="Add Streak", command=self.add_streak)
         add_btn.grid(row=1, column=4, padx=8, pady=10, sticky="ew")
 
         refresh_btn = ctk.CTkButton(top, text="Refresh", command=self.refresh)
