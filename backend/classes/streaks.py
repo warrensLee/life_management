@@ -14,7 +14,7 @@ from datetime import date, time
 #   9 ended_at (if ended, otherwise null)
 
 @dataclass
-class Streaks:
+class Streak:
     id: int
     action: str
     created_at: date

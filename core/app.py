@@ -6,8 +6,8 @@ import traceback
 
 from backend import database
 from backend import services
-from backend.classes import goal, personality, habits, streaks
-from backend.routes import goal
+from backend.classes import goal, streaks
+from backend.routes import goal, streaks
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("core/app_theme.json")
@@ -40,9 +40,9 @@ class App(ctk.CTk):
         self.refresh()
 
     def on_add(self):
-        act = self.action_entry.get()
-        loc = self.location_entry.get()
-        due = self.date_entry.get()
+        act = self.action_entry.get().strip()
+        loc = self.location_entry.get().strip()
+        due = self.goal_date_entry.get().strip()
 
         try:
             due = date.fromisoformat(due)
@@ -57,21 +57,20 @@ class App(ctk.CTk):
             return
 
         self.location_entry.delete(0, "end")
-        self.date_entry.delete(0, "end")
+        self.goal_date_entry.delete(0, "end")
         self.action_entry.delete(0, "end")
 
         self.refresh()
 
-    def refresh(self):
+    def goal_refresh(self):
         # clear existing rows
-        for _, _, row in self.rows:
+        for _, _, row in self.goal_rows:
             row.destroy()
-        self.rows.clear()
+        self.goal_rows.clear()
 
         goals = goal.get_goals(include_completed=self.show_completed.get())
-
         for g in goals:
-            row = ctk.CTkFrame(self.list_frame)
+            row = ctk.CTkFrame(self.goal_list_frame)
             row.pack(fill="x", padx=6, pady=6)
 
             done_var = ctk.BooleanVar(value=g.completed)
@@ -87,7 +86,13 @@ class App(ctk.CTk):
                 row, text="Delete", width=70, command=lambda gid=g.id: self.delete_goal(gid))
             del_btn.pack(side="right", padx=10)
 
-            self.rows.append((g.id, done_var, row))
+            self.goal_rows.append((g.id, done_var, row))
+
+    
+            
+    def refresh(self):
+        self.goal_refresh()
+        #self.streak_refresh()  # TODO: implement streak refresh similar to goal_refresh
 
     def toggle_complete(self, goal_id, var):
         try:
@@ -111,18 +116,18 @@ class App(ctk.CTk):
         for i in range(6):
             top.grid_columnconfigure(i, weight=1)
 
-        self.font_title = ctk.CTkFont(size=18, weight="bold")
-        self.font_label = ctk.CTkFont(size=14)
-        self.font_entry = ctk.CTkFont(size=14)
-        self.font_button = ctk.CTkFont(size=14, weight="bold")
+        self.goal_font_title = ctk.CTkFont(size=18, weight="bold")
+        self.goal_font_label = ctk.CTkFont(size=14)
+        self.goal_font_entry = ctk.CTkFont(size=14)
+        self.goal_font_button = ctk.CTkFont(size=14, weight="bold")
         self.goal_font_active = ctk.CTkFont(size=15, weight="normal")
         self.goal_font_completed = ctk.CTkFont(size=14, slant="italic")
 
-        ctk.CTkLabel(top, text="Action / Behavior", font=self.font_title).grid(
+        ctk.CTkLabel(top, text="Action / Behavior", font=self.goal_font_title).grid(
             row=0, column=0, padx=10, pady=(10, 0), sticky="w")
-        ctk.CTkLabel(top, text="Location", font=self.font_title).grid(
+        ctk.CTkLabel(top, text="Location", font=self.goal_font_title).grid(
             row=0, column=1, padx=10, pady=(10, 0), sticky="w")
-        ctk.CTkLabel(top, text="Date (YYYY-MM-DD)", font=self.font_title).grid(
+        ctk.CTkLabel(top, text="Date (YYYY-MM-DD)", font=self.goal_font_title).grid(
             row=0, column=2, padx=10, pady=(10, 0), sticky="w")
 
         self.action_entry = ctk.CTkEntry(top, placeholder_text="Run 2 miles")
@@ -131,8 +136,8 @@ class App(ctk.CTk):
         self.location_entry = ctk.CTkEntry(top, placeholder_text="Gym")
         self.location_entry.grid(row=1, column=1, padx=8, pady=10, sticky="ew")
 
-        self.date_entry = ctk.CTkEntry(top, placeholder_text="2026-02-01")
-        self.date_entry.grid(row=1, column=2, padx=8, pady=10, sticky="ew")
+        self.goal_date_entry = ctk.CTkEntry(top, placeholder_text="2026-02-01")
+        self.goal_date_entry.grid(row=1, column=2, padx=8, pady=10, sticky="ew")
 
         add_btn = ctk.CTkButton(top, text="Add Goal", command=self.on_add)
         add_btn.grid(row=1, column=3, padx=8, pady=10, sticky="ew")
@@ -151,10 +156,10 @@ class App(ctk.CTk):
         mid.grid_columnconfigure(0, weight=1)
         mid.grid_rowconfigure(0, weight=1)
 
-        self.list_frame = ctk.CTkScrollableFrame(mid)
-        self.list_frame.grid(row=0, column=0, padx=12, pady=12, sticky="nsew")
+        self.goal_list_frame = ctk.CTkScrollableFrame(mid)
+        self.goal_list_frame.grid(row=0, column=0, padx=12, pady=12, sticky="nsew")
 
-        self.rows = []  # store tuples: (goal_id, completed_var, row_frame)
+        self.goal_rows = []  # store tuples: (goal_id, completed_var, row_frame)
 
     def build_streaks_tab(self, parent):
         parent.grid_columnconfigure(0, weight=1)
@@ -165,18 +170,18 @@ class App(ctk.CTk):
         for i in range(6):
             top.grid_columnconfigure(i, weight=1)
 
-        self.font_title = ctk.CTkFont(size=18, weight="bold")
-        self.font_label = ctk.CTkFont(size=14)
-        self.font_entry = ctk.CTkFont(size=14)
-        self.font_button = ctk.CTkFont(size=14, weight="bold")
-        self.goal_font_active = ctk.CTkFont(size=15, weight="normal")
-        self.goal_font_completed = ctk.CTkFont(size=14, slant="italic")
+        self.streak_font_title = ctk.CTkFont(size=18, weight="bold")
+        self.streak_font_label = ctk.CTkFont(size=14)
+        self.streak_font_entry = ctk.CTkFont(size=14)
+        self.streak_font_button = ctk.CTkFont(size=14, weight="bold")
+        self.streak_font_active = ctk.CTkFont(size=15, weight="normal")
+        self.streak_font_completed = ctk.CTkFont(size=14, slant="italic")
 
-        ctk.CTkLabel(top, text="Action / Behavior", font=self.font_title).grid(
+        ctk.CTkLabel(top, text="Action / Behavior", font=self.streak_font_title).grid(
             row=0, column=0, padx=10, pady=(10, 0), sticky="w")
-        ctk.CTkLabel(top, text="Location", font=self.font_title).grid(
+        ctk.CTkLabel(top, text="Location", font=self.streak_font_title).grid(
             row=0, column=1, padx=10, pady=(10, 0), sticky="w")
-        ctk.CTkLabel(top, text="Date (YYYY-MM-DD)", font=self.font_title).grid(
+        ctk.CTkLabel(top, text="Date (YYYY-MM-DD)", font=self.streak_font_title).grid(
             row=0, column=2, padx=10, pady=(10, 0), sticky="w")
 
         self.action_entry = ctk.CTkEntry(top, placeholder_text="Run 2 miles")
@@ -185,25 +190,25 @@ class App(ctk.CTk):
         self.location_entry = ctk.CTkEntry(top, placeholder_text="Gym")
         self.location_entry.grid(row=1, column=1, padx=8, pady=10, sticky="ew")
 
-        self.date_entry = ctk.CTkEntry(top, placeholder_text="2026-02-01")
-        self.date_entry.grid(row=1, column=2, padx=8, pady=10, sticky="ew")
+        self.streak_date_entry = ctk.CTkEntry(top, placeholder_text="2026-02-01")
+        self.streak_date_entry.grid(row=1, column=2, padx=8, pady=10, sticky="ew")
 
-        add_btn = ctk.CTkButton(top, text="Add Goal", command=self.on_add)
+        add_btn = ctk.CTkButton(top, text="Add Streaks", command=self.on_add)
         add_btn.grid(row=1, column=3, padx=8, pady=10, sticky="ew")
 
         refresh_btn = ctk.CTkButton(top, text="Refresh", command=self.refresh)
         refresh_btn.grid(row=1, column=4, padx=8, pady=10, sticky="ew")
 
-        # Scrollable goals list
+        # Scrollable streaks list
         mid = ctk.CTkFrame(parent)
         mid.grid(row=1, column=0, padx=16, pady=(0, 16), sticky="nsew")
         mid.grid_columnconfigure(0, weight=1)
         mid.grid_rowconfigure(0, weight=1)
 
-        self.list_frame = ctk.CTkScrollableFrame(mid)
-        self.list_frame.grid(row=0, column=0, padx=12, pady=12, sticky="nsew")
+        self.streak_list_frame = ctk.CTkScrollableFrame(mid)
+        self.streak_list_frame.grid(row=0, column=0, padx=12, pady=12, sticky="nsew")
 
-        self.rows = []  # store tuples: (goal_id, completed_var, row_frame)
+        self.streak_rows = []  # store tuples: (streak_id, completed_var, row_frame)
 
 def run():
     App().mainloop()
