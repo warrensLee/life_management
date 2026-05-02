@@ -77,11 +77,11 @@ def delete_streak(streak_id: int):
 
 def increment_streak(streak_id: int):
     with get_conn() as conn:
-        conn.execute("""UPDATE streaks
-                     set days_completed = days_completed + 1
-                     WHERE id = ?""",
-                     (streak_id,)
-                     )
+        conn.execute("""
+                UPDATE streaks
+                set days_completed = days_completed + 1
+                WHERE id = ?
+            """, (streak_id,))
         conn.commit()
 
 def update_streaks(streaks_id: int, title: str, desc: str):
