@@ -1,14 +1,20 @@
 from backend.routes import streaks  
-from backend.classes import streaks
 from backend.services import parse_due_date
 
 from tkinter import messagebox
-from datetime import date
 import traceback
-
 import customtkinter as ctk
 
 class StreaksTab(ctk.CTkFrame):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.grid(row=0, column=0, sticky="nsew")
+
+        self.parent = parent
+        self.build_streaks_tab(parent)
+        self.refresh()
+
     def add_streak(self):
         title = self.streak_title_entry.get().strip()
         desc = self.streak_description_entry.get().strip()
@@ -39,6 +45,7 @@ class StreaksTab(ctk.CTkFrame):
             row.destroy()
         self.streak_rows.clear()
 
+        self.show_completed = ctk.BooleanVar(value=True)
         all_streaks = streaks.get_streaks(include_completed=self.show_completed.get())
         for s in all_streaks:
             row = ctk.CTkFrame(self.streak_list_frame)
@@ -63,12 +70,18 @@ class StreaksTab(ctk.CTkFrame):
         try:
             if var.get():
                 streaks.increment_streak(streak_id)
+                streaks.set_streaks_completed(streak_id, True)
+            else:
+                streaks.set_streaks_completed(streak_id, False)
         finally:
             self.refresh()
 
     def delete_streak(self, streak_id):
         streaks.remove_streak(streak_id)
         self.refresh()
+
+    def refresh(self):
+        self.streak_refresh()
 
     def build_streaks_tab(self, parent):
         parent.grid_columnconfigure(0, weight=1)

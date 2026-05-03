@@ -15,6 +15,9 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.title("Life Manager V1")
+        self.geometry("1280x720")
+
         database.init_db()
 
         self.tabs = ctk.CTkTabview(self)
@@ -22,18 +25,9 @@ class App(ctk.CTk):
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
-        
+
         self.goals_tab = GoalsTab(self.tabs.add("Goals"))
         self.streaks_tab = StreaksTab(self.tabs.add("Streaks"))
-
-    # def on_add(self):
-    #     self.add_goal()
-    #     self.add_streak()
-    #     self.refresh()
-            
-    # def refresh(self):
-    #     self.goal_refresh()
-    #     self.streak_refresh()  # TODO: implement streak refresh similar to goal_refresh
 
 
 def run():

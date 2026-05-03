@@ -21,11 +21,11 @@ class Streak:
     created_at: date
     updated_at: date
     ended_at: date | None = None
-    completed: int = 0
+    completed: bool = False
     days_completed: int = 0
 
     def display(self) -> str:
-        return f"{self.days_completed} | {self.title} | {self.description} | {self.completed}"
+        return f"{self.days_completed} | {self.title} | {self.description}  {'🔥' if self.completed else ''}"
 
     # future possibility of validating behaviors & locations
     def validate(self):

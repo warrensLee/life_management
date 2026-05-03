@@ -15,7 +15,7 @@ class Goal:
     completed: bool = False
 
     def display(self) -> str:
-        return f"{self.action} | {self.location} | {self.due}"
+        return f"{self.action} | {self.location} | {self.due} {'✅' if self.completed else ''}"
 
     # future possibility of validating behaviors & locations
     def validate(self):
