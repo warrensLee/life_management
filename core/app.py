@@ -8,7 +8,7 @@ from frontend.tabs.goals_tab import GoalsTab
 from frontend.tabs.streaks_tab import StreaksTab
 
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("core/app_theme.json")
+ctk.set_default_color_theme("core/themes/green_theme.json")
 
 
 class App(ctk.CTk):
@@ -26,8 +26,8 @@ class App(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self.goals_tab = GoalsTab(self.tabs.add("Goals"))
         self.streaks_tab = StreaksTab(self.tabs.add("Streaks"))
+        self.goals_tab = GoalsTab(self.tabs.add("Goals"))
 
 
 def run():

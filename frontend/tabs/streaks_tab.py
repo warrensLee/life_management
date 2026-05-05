@@ -4,6 +4,7 @@ from backend.services import parse_due_date
 from tkinter import messagebox
 import traceback
 import customtkinter as ctk
+from PIL import Image, ImageFilter, ImageEnhance
 
 class StreaksTab(ctk.CTkFrame):
 
@@ -39,6 +40,30 @@ class StreaksTab(ctk.CTkFrame):
         self.streak_date_entry.delete(0, "end")
         self.refresh()
 
+    def make_popping_emoji(self, path, size=(64, 64), glow_color=(255, 90, 40, 180)):
+        img = Image.open(path).convert("RGBA").resize(size, Image.LANCZOS)
+
+        # use emoji alpha as the outline/glow shape
+        alpha = img.getchannel("A")
+
+        glow = Image.new("RGBA", size, glow_color)
+        glow.putalpha(alpha)
+
+        # bigger/softer glow behind emoji
+        glow = glow.filter(ImageFilter.GaussianBlur(3))
+
+        # slightly boost original emoji
+        img = ImageEnhance.Color(img).enhance(1.25)
+        img = ImageEnhance.Contrast(img).enhance(1.1)
+
+        final = Image.alpha_composite(glow, img)
+
+        return ctk.CTkImage(
+            light_image=final,
+            dark_image=final,
+            size=size
+        )
+
     def streak_refresh(self):
         # clear existing rows
         for _, _, row in self.streak_rows:
@@ -48,23 +73,92 @@ class StreaksTab(ctk.CTkFrame):
         self.show_completed = ctk.BooleanVar(value=True)
         all_streaks = streaks.get_streaks(include_completed=self.show_completed.get())
         for s in all_streaks:
-            row = ctk.CTkFrame(self.streak_list_frame)
-            row.pack(fill="x", padx=6, pady=6)
+            row = ctk.CTkFrame(
+                self.streak_list_frame,
+                corner_radius=0,
+                height=80
+            )
+            row.pack(fill="x", padx=10, pady=10)
+            row.pack_propagate(False)
 
-            done_var = ctk.BooleanVar(value=s.completed)
-            chk = ctk.CTkCheckBox(row, text="", variable=done_var,
-                                    command=lambda sid=s.id, v=done_var: self.toggle_streak_complete(sid, v))
-            chk.pack(side="left", padx=(10, 6))
+            # user signals the streak is complete for the day
+            done_var_checkbox = ctk.BooleanVar(value=s.completed)
+            chk = ctk.CTkCheckBox(row, text="", width=44, variable=done_var_checkbox, command=lambda sid=s.id, v=done_var_checkbox: self.toggle_streak_complete(sid, v))
+            chk.pack(side="left", anchor="n", padx=(10, 0), pady=(30, 0))
 
-            lbl = ctk.CTkLabel(row, text=s.display(), anchor="w", font=self.streak_font_completed if s.completed
-                else self.streak_font_active, text_color="#9ca3af" if s.completed else None)
-            lbl.pack(side="left", padx=6, fill="x", expand=True)
+            # left side with title, description, created at, and days completed
+            left = ctk.CTkFrame(row, fg_color="transparent")
+            left.pack(side="left", fill="y", expand=False, padx=(2, 0), pady=(10, 0))
+
+            # currently just the emoji
+            beside_left = ctk.CTkFrame(row, width=110, fg_color="transparent")
+            beside_left.pack(side="left", anchor="n", padx=(0, 0), pady=(10, 0))
+            beside_left.pack_propagate(False)
+
+            # add space for furture calendar view
+            spacer = ctk.CTkFrame(row, fg_color="transparent")
+            spacer.pack(side="left", expand=True)
+            
+            # right side for delete button, emoji, and a future calendar view
+            right = ctk.CTkFrame(row, fg_color="transparent", width=160)
+            right.pack(side="right", fill="y", padx=12, pady=8)
+            right.pack_propagate(False)
+
+            emoji_path = "core/images/emojis/fire_3d.png" if s.completed else "core/images/emojis/seedling_3d.png"
+
+            glow_color = (255, 120, 50, 200) if s.completed else (120, 255, 140, 180)
+
+            emoji_img = self.make_popping_emoji(
+                emoji_path,
+                size=(64, 64),
+                glow_color=glow_color
+            )
+
+            emoji_label = ctk.CTkLabel(
+                beside_left,
+                text="",
+                image=emoji_img
+            )
+            emoji_label.image = emoji_img
+            emoji_label.pack(anchor="n", pady=(0, 0))
 
             del_btn = ctk.CTkButton(
-                row, text="Delete", width=70, command=lambda sid=s.id: self.delete_streak(sid))
-            del_btn.pack(side="right", padx=10)
+                right,
+                text="Delete",
+                width=70,
+                command=lambda sid=s.id: self.delete_streak(sid)
+            )
+            del_btn.pack(side="right", anchor="n", padx=(0, 0), pady=(5, 0))
 
-            self.streak_rows.append((s.id, done_var, row))
+            #del_btn.pack(pady=(0, 4))
+
+            # if there is no color selected, this is the default seleciton
+            # it depends on complteion of the streak
+            default_color = "#51E484"
+            if s.completed:
+                     default_color="#E47F51" 
+
+            # title formatting and details
+            title = ctk.CTkLabel(
+                left,
+                text=s.title,
+                font=("Cooper Black", 28), 
+                text_color=s.streak_color if hasattr(s, "streak_color") else default_color,
+                anchor="w"
+            )
+            title.pack(anchor="w")
+
+            # below title details, and their formatting
+            details = ctk.CTkLabel(
+                left,
+                text=f"{s.description} • {s.created_at} • {s.days_completed} days",
+                font=("Cooper Black", 24),
+                text_color=s.streak_color if hasattr(s, "streak_color") else default_color,
+                anchor="w"
+            )
+            details.pack(anchor="w", pady=(0, 0))
+
+            self.streak_rows.append((s.id, done_var_checkbox, row))
 
     def toggle_streak_complete(self, streak_id, var):
         try:

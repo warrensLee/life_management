@@ -83,14 +83,14 @@ class GoalsTab(ctk.CTkFrame):
             )
             chk.pack(side="left", padx=(10, 6))
 
-            lbl = ctk.CTkLabel(
+            goal_lbl = ctk.CTkLabel(
                 row,
                 text=g.display(),
                 anchor="w",
                 font=self.goal_font_completed if g.completed else self.goal_font_active,
                 text_color="#9ca3af" if g.completed else None
             )
-            lbl.pack(side="left", padx=6, fill="x", expand=True)
+            goal_lbl.pack(side="left", padx=6, fill="x", expand=True)
 
             del_btn = ctk.CTkButton(
                 row,
@@ -126,6 +126,7 @@ class GoalsTab(ctk.CTkFrame):
 
     def toggle_goal_complete(self, goal_id, var):
         goal.set_goal_completed(goal_id, var.get())
+        self.refresh()
 
     def delete_goal(self, goal_id):
         goal.remove_goal(goal_id)

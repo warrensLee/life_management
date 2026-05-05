@@ -24,8 +24,9 @@ class Streak:
     completed: bool = False
     days_completed: int = 0
 
+    # primitive display method, good for bug testing easily
     def display(self) -> str:
-        return f"{self.days_completed} | {self.title} | {self.description}  {'🔥' if self.completed else ''}"
+        return f"{self.days_completed} | {self.title} | {self.description}  {'🔥' if self.completed else '🌱'}"
 
     # future possibility of validating behaviors & locations
     def validate(self):

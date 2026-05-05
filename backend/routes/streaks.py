@@ -49,7 +49,7 @@ def list_streaks(include_completed=True) -> list[Streak]:
                 created_at=parse_due_date(created_at),
                 updated_at=parse_due_date(updated_at),
                 ended_at=parse_due_date(ended_at) if ended_at else None,
-                completed=completed,
+                completed=bool(completed),
                 days_completed=days_completed,
             )
         )
