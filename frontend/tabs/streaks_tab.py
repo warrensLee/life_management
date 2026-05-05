@@ -14,6 +14,19 @@ class StreaksTab(ctk.CTkFrame):
 
         self.parent = parent
         self.build_streaks_tab(parent)
+
+        self.fire_emoji = self.make_popping_emoji(
+            "core/images/emojis/fire_3d.png",
+            size=(64, 64),
+            glow_color=(255, 120, 50, 200)
+        )
+
+        self.seedling_emoji = self.make_popping_emoji(
+            "core/images/emojis/seedling_3d.png",
+            size=(64, 64),
+            glow_color=(120, 255, 140, 180)
+        )
+
         self.refresh()
 
     def add_streak(self):
@@ -65,16 +78,16 @@ class StreaksTab(ctk.CTkFrame):
         )
 
     def streak_refresh(self):
-        # clear existing rows
-        for _, _, row in self.streak_rows:
-            row.destroy()
-        self.streak_rows.clear()
+        old_body = self.streak_body
 
-        self.show_completed = ctk.BooleanVar(value=True)
-        all_streaks = streaks.get_streaks(include_completed=self.show_completed.get())
+        new_body = ctk.CTkFrame(self.streak_list_frame, fg_color="transparent")
+        new_rows = []
+
+        all_streaks = streaks.get_streaks(include_completed=True)
+
         for s in all_streaks:
             row = ctk.CTkFrame(
-                self.streak_list_frame,
+                new_body,
                 corner_radius=0,
                 height=80
             )
@@ -104,15 +117,7 @@ class StreaksTab(ctk.CTkFrame):
             right.pack(side="right", fill="y", padx=12, pady=8)
             right.pack_propagate(False)
 
-            emoji_path = "core/images/emojis/fire_3d.png" if s.completed else "core/images/emojis/seedling_3d.png"
-
-            glow_color = (255, 120, 50, 200) if s.completed else (120, 255, 140, 180)
-
-            emoji_img = self.make_popping_emoji(
-                emoji_path,
-                size=(64, 64),
-                glow_color=glow_color
-            )
+            emoji_img = self.fire_emoji if s.completed else self.seedling_emoji
 
             emoji_label = ctk.CTkLabel(
                 beside_left,
@@ -158,7 +163,13 @@ class StreaksTab(ctk.CTkFrame):
             )
             details.pack(anchor="w", pady=(0, 0))
 
-            self.streak_rows.append((s.id, done_var_checkbox, row))
+            new_rows.append((s.id, done_var_checkbox, row))
+
+        new_body.pack(fill="both", expand=True)
+        old_body.destroy()
+
+        self.streak_body = new_body
+        self.streak_rows = new_rows
 
     def toggle_streak_complete(self, streak_id, var):
         try:
@@ -233,5 +244,7 @@ class StreaksTab(ctk.CTkFrame):
 
         self.streak_list_frame = ctk.CTkScrollableFrame(mid)
         self.streak_list_frame.grid(row=0, column=0, padx=12, pady=12, sticky="nsew")
+        self.streak_body = ctk.CTkFrame(self.streak_list_frame, fg_color="transparent")
+        self.streak_body.pack(fill="both", expand=True)
 
         self.streak_rows = []  # store tuples: (streak_id, completed_var, row_frame)
