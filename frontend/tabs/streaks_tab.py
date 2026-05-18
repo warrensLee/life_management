@@ -5,6 +5,7 @@ import customtkinter as ctk
 from PIL import Image, ImageEnhance, ImageFilter
 
 from backend.routes import streaks
+from backend.routes.streaks import STREAK_THEMES
 from backend.services import parse_due_date
 from frontend.components.glass_card import GlassCard
 from frontend.components.screen_frame import (
@@ -12,6 +13,8 @@ from frontend.components.screen_frame import (
     ScreenFrame,
 )
 from frontend.components.rounded_card import RoundedCard
+
+THEME_NAMES = ["🟢 Default", "🌊 Ocean", "🌅 Sunset", "🟣 Violet"]
 
 class StreaksTab(ctk.CTkFrame):
 
@@ -41,10 +44,11 @@ class StreaksTab(ctk.CTkFrame):
         desc = self.streak_description_entry.get().strip()
         days = self.streak_days_entry.get().strip()
         due = self.streak_date_entry.get().strip()
+        theme = self.streak_theme_var.get()
 
         try:
             due = parse_due_date(due)
-            streaks.add_streak(title, desc, days, due)
+            streaks.add_streak(title, desc, days, due, theme)
         except ValueError as e:
             messagebox.showwarning("Invalid", str(e))
             return
@@ -268,10 +272,9 @@ class StreaksTab(ctk.CTkFrame):
             border_color="#263345"
         )
 
-        for i in range(6):
-            top.grid_columnconfigure(i, weight=0)
+        for i in range(5):
+            top.grid_columnconfigure(i, weight=1)
 
-        top.grid_columnconfigure(4, weight=1)
         top.grid_columnconfigure(5, weight=0)
 
         top.grid(
@@ -302,6 +305,8 @@ class StreaksTab(ctk.CTkFrame):
         ctk.CTkLabel(top, text="Start Date (YYYY-MM-DD)", font=self.streak_font_title).grid(
             row=0, column=3, padx=20, pady=(10, 0), sticky="w")
         
+        ctk.CTkLabel(top, text="Theme", font=self.streak_font_title).grid(
+            row=0, column=4, padx=20, pady=(10, 0), sticky="w")
         # now for placeholder text and entry points
         self.streak_title_entry = ctk.CTkEntry(
             top,
@@ -339,6 +344,16 @@ class StreaksTab(ctk.CTkFrame):
         )
         self.streak_date_entry.grid(row=1, column=3, padx=8, pady=(20,10), sticky="ew")
 
+        self.streak_theme_var = ctk.StringVar(value="default")
+
+        self.streak_theme_menu = ctk.CTkOptionMenu(
+            top,
+            values=THEME_NAMES,
+            variable=self.streak_theme_var
+        )
+        
+        self.streak_theme_menu.grid(row=1, column=4, padx=8, pady=(20,10), sticky="ew")
+
         add_btn = ctk.CTkButton(
             top,
             text="Add Streak",
@@ -348,7 +363,7 @@ class StreaksTab(ctk.CTkFrame):
             font=("SF Pro Display", 14, "bold"),
             command=self.add_streak
         )
-        add_btn.grid(row=1, column=4, padx=(24, 8), pady=(20,10), sticky="e")
+        add_btn.grid(row=1, column=5, padx=(24, 8), pady=(20,10), sticky="e")
 
         refresh_btn = ctk.CTkButton(
             top,
@@ -359,7 +374,7 @@ class StreaksTab(ctk.CTkFrame):
             font=("SF Pro Display", 14, "bold"),
             command=self.refresh
         )
-        refresh_btn.grid(row=1, column=5, padx=(8, 10), pady=(20,10), sticky="e")
+        refresh_btn.grid(row=1, column=6, padx=(8, 10), pady=(20,10), sticky="e")
 
         # Scrollable streaks list
         mid = ctk.CTkFrame(

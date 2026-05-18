@@ -12,6 +12,7 @@ from datetime import date, time
 #   7 created_at
 #   8 updated_at
 #   9 ended_at (if ended, otherwise null)
+#   10 color theme 
 
 @dataclass
 class Streak:
@@ -23,6 +24,7 @@ class Streak:
     ended_at: date | None = None
     completed: bool = False
     days_completed: int = 0
+    theme_name: str = "default"
 
     # primitive display method, good for bug testing easily
     def display(self) -> str:
