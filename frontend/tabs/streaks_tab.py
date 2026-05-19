@@ -16,6 +16,12 @@ from frontend.components.rounded_card import RoundedCard
 
 THEME_NAMES = ["🟢 Default", "🌊 Ocean", "🌅 Sunset", "🟣 Violet"]
 
+THEME_VALUE_MAP = {
+    "🟢 Default": "default",
+    "🌊 Ocean": "ocean",
+    "🌅 Sunset": "sunset",
+    "🟣 Violet": "violet"
+}
 class StreaksTab(ctk.CTkFrame):
 
     def __init__(self, parent):
@@ -44,7 +50,8 @@ class StreaksTab(ctk.CTkFrame):
         desc = self.streak_description_entry.get().strip()
         days = self.streak_days_entry.get().strip()
         due = self.streak_date_entry.get().strip()
-        theme = self.streak_theme_var.get()
+        theme_label = self.streak_theme_var.get()
+        theme = THEME_VALUE_MAP.get(theme_label, "default")
 
         try:
             due = parse_due_date(due)
@@ -159,26 +166,29 @@ class StreaksTab(ctk.CTkFrame):
 
             # if there is no color selected, this is the default seleciton
             # it depends on complteion of the streak
-            default_color = "#51E484"
-            if s.completed:
-                     default_color="#E47F51" 
+            theme = STREAK_THEMES.get(s.theme_name, STREAK_THEMES["default"])
+
+            streak_color = (
+                theme["complete"]
+                if s.completed
+                else theme["incomplete"]
+            )
 
             # title formatting and details
             title = ctk.CTkLabel(
                 left,
                 text=s.title,
                 font=("Cooper Black", 28), 
-                text_color=s.streak_color if hasattr(s, "streak_color") else default_color,
+                text_color=streak_color,
                 anchor="w"
             )
             title.pack(anchor="w")
-
             # below title details, and their formatting
             details = ctk.CTkLabel(
                 left,
                 text=f"{s.description} • {s.created_at} • {s.days_completed} days",
                 font=("Cooper Black", 24),
-                text_color=s.streak_color if hasattr(s, "streak_color") else default_color,
+                text_color=streak_color,
                 anchor="w"
             )
             details.pack(anchor="w", pady=(0, 0))
@@ -199,13 +209,19 @@ class StreaksTab(ctk.CTkFrame):
         self.streak_rows = new_rows
 
     def single_streak_refresh(self, streak_id, completed):
-
-        default_color = "#E47F51" if completed else "#51E484"
+        #default_color = "#E47F51" if completed else "#51E484"
         emoji_img = self.fire_emoji if completed else self.seedling_emoji
 
         for s in self.streak_rows:
 
             if s["id"] == streak_id:
+                theme = STREAK_THEMES.get(s["streak"].theme_name, STREAK_THEMES["default"])
+
+                streak_color = (
+                    theme["complete"]
+                    if completed
+                    else theme["incomplete"]
+                )
 
                 # update local streak object
                 if completed:
@@ -216,11 +232,11 @@ class StreaksTab(ctk.CTkFrame):
                 s["streak"].completed = completed
 
                 # update visuals
-                s["title"].configure(text_color=default_color)
+                s["title"].configure(text_color=streak_color)
 
                 s["details"].configure(
                     text=f'{s["streak"].description} • {s["streak"].created_at} • {s["streak"].days_completed} days',
-                    text_color=default_color
+                    text_color=streak_color
                 )
 
                 s["emoji"].configure(image=emoji_img)
@@ -275,7 +291,7 @@ class StreaksTab(ctk.CTkFrame):
         for i in range(5):
             top.grid_columnconfigure(i, weight=1)
 
-        top.grid_columnconfigure(5, weight=0)
+        top.grid_columnconfigure(6, weight=0)
 
         top.grid(
             row=0,
@@ -344,7 +360,7 @@ class StreaksTab(ctk.CTkFrame):
         )
         self.streak_date_entry.grid(row=1, column=3, padx=8, pady=(20,10), sticky="ew")
 
-        self.streak_theme_var = ctk.StringVar(value="default")
+        self.streak_theme_var = ctk.StringVar(value="🟢 Default")
 
         self.streak_theme_menu = ctk.CTkOptionMenu(
             top,

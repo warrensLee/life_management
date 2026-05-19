@@ -9,8 +9,8 @@ from backend.services import parse_due_date
 
 STREAK_THEMES = {
     "default": {
-        "complete": "#51E484",
-        "incomplete": "#E47F51"
+        "complete": "#E47F51",
+        "incomplete": "#51E484"
     },
 
     "ocean": {
@@ -75,6 +75,7 @@ def list_streaks(include_completed=True) -> list[Streak]:
                 ended_at=parse_due_date(ended_at) if ended_at else None,
                 completed=bool(completed),
                 days_completed=days_completed,
+                theme_name=theme_name,
             )
         )
 
