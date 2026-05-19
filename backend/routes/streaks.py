@@ -1,9 +1,8 @@
-from datetime import date, time
+from datetime import date, timedelta
 
 from backend.database import get_conn
 from backend.classes.streaks import Streak
 from backend.services import parse_due_date
-
 
 ''' ------------------------------- streak themes ------------------------------- '''
 
@@ -158,3 +157,15 @@ def remove_streak(streak_id: int):
 
 def get_theme(theme_name):
     return STREAK_THEMES.get(theme_name, STREAK_THEMES["default"])
+
+def get_naive_completed_days_for_month(self, days_completed):
+    today = date.today()
+    completed_days = set()
+
+    for i in range(days_completed):
+        streak_day = today - timedelta(days=i)
+
+        if streak_day.year == today.year and streak_day.month == today.month:
+            completed_days.add(streak_day.day)
+
+    return completed_days

@@ -1,13 +1,15 @@
 import traceback
 from tkinter import messagebox
 
+import calendar
+from datetime import date
+
 import customtkinter as ctk
 from PIL import Image, ImageEnhance, ImageFilter
 
 from backend.routes import streaks
 from backend.routes.streaks import STREAK_THEMES
 from backend.services import parse_due_date
-from frontend.components.glass_card import GlassCard
 from frontend.components.screen_frame import (
     SCREEN_BG,
     ScreenFrame,
@@ -95,6 +97,68 @@ class StreaksTab(ctk.CTkFrame):
             size=size
         )
 
+    def build_calendar_view(self, parent, completed_days=None):
+        if completed_days is None:
+            completed_days = set()
+
+        # get todays time and stuff for calendar generation
+        today = date.today()
+        year = today.year
+        month = today.month
+
+        # build calendar, start on sunday, get num of days in that month
+        cal = calendar.Calendar(firstweekday=6)  
+        month_days = list(cal.itermonthdays(year, month))
+
+        # create a grid of labels for each day, highlight completed days
+        calendar_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        calendar_frame.pack(side="right", padx=(0, 14), pady=(8, 0))
+
+        day_labels = ["SU", "M", "T", "W", "TH", "F", "S"]
+
+        # create labels for the days of the week
+        for col, label in enumerate(day_labels):
+            ctk.CTkLabel(
+                calendar_frame,
+                text=label,
+                font=("SF Pro Display", 11, "bold"),
+                text_color="#8A94A6",
+                width=22,
+                height=22
+            ).grid(row=0, column=col, padx=2, pady=(0, 4))
+
+        # add circles for each day completed, empty circles for days not completed, and blank for days not in month
+        for i, day in enumerate(month_days):
+            row = (i//7) + 1
+            col = i % 7
+
+            # blank for days not in month
+            if day == 0:
+                ctk.CTkLabel(calendar_frame, text="", width=22, height=22).grid(
+                    row=row,
+                    column=col,
+                    padx=2,
+                    pady=2
+                )
+                continue
+            
+            # check if the day is in the completed days set, and color accordingly
+            completed = day in completed_days
+
+            # use a colored circle emoji for completed days, and a gray circle for incomplete days
+            circle = ctk.CTkLabel(
+                calendar_frame,
+                text=str(day),
+                width=22,
+                height=22,
+                corner_radius=11,
+                fg_color="#2ECC71" if completed else "#263345",
+                text_color="#FFFFFF" if completed else "#8A94A6",
+                font=("SF Pro Display", 11, "bold")
+            )
+
+            circle.grid(row=row, column=col, padx=2, pady=2)
+
     def streak_refresh(self):
         old_body = self.streak_body
 
@@ -104,28 +168,33 @@ class StreaksTab(ctk.CTkFrame):
         new_rows = []
 
         all_streaks = streaks.get_streaks(include_completed=True)
-
+        
+        # create a card for each individual streak
+        # then add the streak to the body
         for s in all_streaks:
             card = RoundedCard(
                 new_body,
-                height=115,
+                height=200,
                 bg="#0F141C",
                 card_color="#101720",
                 border_color="#263345",
-                radius=24
+                radius=24,
+                border_width=1
             )
-            card.pack(fill="x", padx=(20, 46), pady=(20,10))
+
+            card.pack(fill="x", padx=(20, 46), pady=(12, 12))
 
             row = card.content
 
             # user signals the streak is complete for the day
             done_var_checkbox = ctk.BooleanVar(value=s.completed)
             chk = ctk.CTkCheckBox(row, text="", width=44, variable=done_var_checkbox, command=lambda sid=s.id, v=done_var_checkbox: self.toggle_streak_complete(sid, v))
-            chk.pack(side="left", anchor="n", padx=(10, 0), pady=(30, 0))
+            chk.pack(side="left", anchor="center", padx=(10, 18))
 
             # left side with title, description, created at, and days completed
             left = ctk.CTkFrame(row, fg_color="transparent")
-            left.pack(side="left", fill="y", expand=False, padx=(16, 0), pady=(16, 0))
+            left.pack(side="left", fill="y", padx=(18, 0), pady=(22, 0))
+           
 
             # currently just the emoji
             beside_left = ctk.CTkFrame(row, width=110, fg_color="transparent")
@@ -137,9 +206,8 @@ class StreaksTab(ctk.CTkFrame):
             spacer.pack(side="left", expand=True)
             
             # right side for delete button, emoji, and a future calendar view
-            right = ctk.CTkFrame(row, fg_color="transparent", width=160)
+            right = ctk.CTkFrame(row, fg_color="transparent")
             right.pack(side="right", fill="y", padx=12, pady=8)
-            right.pack_propagate(False)
 
             emoji_img = self.fire_emoji if s.completed else self.seedling_emoji
 
@@ -149,18 +217,21 @@ class StreaksTab(ctk.CTkFrame):
                 image=emoji_img
             )
             emoji_label.image = emoji_img
-            emoji_label.pack(anchor="n", pady=(0, 0))
+            emoji_label.pack(anchor="n", pady=(10, 0))
 
             del_btn = ctk.CTkButton(
                 right,
                 text="Delete",
                 corner_radius=12,
-                width=120,
+                width=80,
                 height=28,
                 font=("SF Pro Display", 14, "bold"),
                 command=lambda sid=s.id: self.delete_streak(sid)
             )
             del_btn.pack(side="right", anchor="n", padx=(0, 0), pady=(5, 0))
+
+            completed_days = streaks.get_naive_completed_days_for_month(self, s.days_completed)
+            self.build_calendar_view(right, completed_days)
 
             #del_btn.pack(pady=(0, 4))
 
@@ -178,7 +249,7 @@ class StreaksTab(ctk.CTkFrame):
             title = ctk.CTkLabel(
                 left,
                 text=s.title,
-                font=("Cooper Black", 28), 
+                font=("Cooper Black", 24), 
                 text_color=streak_color,
                 anchor="w"
             )
@@ -187,7 +258,7 @@ class StreaksTab(ctk.CTkFrame):
             details = ctk.CTkLabel(
                 left,
                 text=f"{s.description} • {s.created_at} • {s.days_completed} days",
-                font=("Cooper Black", 24),
+                font=("Cooper Black", 20),
                 text_color=streak_color,
                 anchor="w"
             )
@@ -323,6 +394,7 @@ class StreaksTab(ctk.CTkFrame):
         
         ctk.CTkLabel(top, text="Theme", font=self.streak_font_title).grid(
             row=0, column=4, padx=20, pady=(10, 0), sticky="w")
+        
         # now for placeholder text and entry points
         self.streak_title_entry = ctk.CTkEntry(
             top,
@@ -331,6 +403,7 @@ class StreaksTab(ctk.CTkFrame):
             font=("SF Pro Display", 14, "bold"),
             border_width=1
         )
+
         self.streak_title_entry.grid(row=1, column=0, padx=8, pady=(20,10), sticky="ew")
 
         self.streak_description_entry = ctk.CTkEntry(
@@ -408,7 +481,8 @@ class StreaksTab(ctk.CTkFrame):
             border_width=0
         )
         self.streak_list_frame.grid(row=0, column=0, padx=(0, 0), pady=12, sticky="nsew")
+
         self.streak_body = ctk.CTkFrame(self.streak_list_frame, fg_color="transparent")
         self.streak_body.pack(fill="both", expand=True)
-
+        
         self.streak_rows = []  # store tuples: (streak_id, completed_var, row_frame)
