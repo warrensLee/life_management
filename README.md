@@ -60,7 +60,7 @@ life-management/
     └── widgets/
         ├── goal_row.py
         └── streak_row.py
-
+```
 ## Notes
 
 `life_manager.db` is used for local development data. In a production-ready version, this file would usually be ignored by Git and generated automatically.
