@@ -53,12 +53,12 @@ def init_db():
         CREATE TABLE IF NOT EXISTS streak_completions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             streak_id INT NOT NULL,
-            comompleted_date TEXT NOT NULL,
+            completed_date TEXT NOT NULL,
             UNIQUE (streak_id, completed_date),
             FOREIGN KEY (streak_id) REFERENCES streaks(id)
         )
         """
-        
+
         execute_sql(conn, "Create goals table", goals_sql)
         execute_sql(conn, "Create streaks table", streaks_sql)
         execute_sql(conn, "Create streaks completions table", streaks_completions_sql)
