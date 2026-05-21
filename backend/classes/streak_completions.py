@@ -8,7 +8,7 @@ from datetime import date, time
 #   3 completed_date: date
 
 @dataclass
-class Streak:
+class Streak_Completions:
     id: int
     streak_id: int
     completed_date: date

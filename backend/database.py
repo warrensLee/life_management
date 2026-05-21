@@ -72,7 +72,7 @@ def init_db():
             streak_id INT NOT NULL,
             completed_date TEXT NOT NULL,
             UNIQUE (streak_id, completed_date),
-            FOREIGN KEY (streak_id) REFERENCES streaks(id)
+            FOREIGN KEY (streak_id) REFERENCES streaks(id) ON DELETE CASCADE
         )
         """
 
