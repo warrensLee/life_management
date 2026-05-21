@@ -1,21 +1,44 @@
-from datetime import date, time
+from datetime import date, timedelta
 
 from backend.database import get_conn
 from backend.classes.streaks import Streak
 from backend.services import parse_due_date
 
+''' ------------------------------- streak themes ------------------------------- '''
+
+STREAK_THEMES = {
+    "default": {
+        "complete": "#E47F51",
+        "incomplete": "#51E484"
+    },
+
+    "ocean": {
+        "complete": "#3BA7FF",
+        "incomplete": "#FF9B6A"
+    },
+
+    "sunset": {
+        "complete": "#FF8A5B",
+        "incomplete": "#5BA8FF"
+    },
+
+    "violet": {
+        "complete": "#B084FF",
+        "incomplete": "#FFD166"
+    }
+}
 
 ''' ------------------------------- helper streaks methods ------------------------------- '''
 
 
-def add_streak(title: str, desc: str, days: int, due: date) -> int:
+def add_streak(title: str, desc: str, days: int, due: date, theme_name: str) -> int:
     with get_conn() as conn:
         cur = conn.execute(
             """
-            INSERT INTO streaks(title, description, days_completed, due)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO streaks(title, description, days_completed, due, theme_name)
+            VALUES (?, ?, ?, ?, ?)
             """,
-            (title, desc, days, due),
+            (title, desc, days, due, theme_name),
         )
         conn.commit()
         return cur.lastrowid
@@ -24,7 +47,7 @@ def list_streaks(include_completed=True) -> list[Streak]:
     q = """
         SELECT id, title, description,
                created_at, updated_at, ended_at,
-               completed, days_completed
+               completed, days_completed, theme_name
         FROM streaks
     """
 
@@ -39,7 +62,7 @@ def list_streaks(include_completed=True) -> list[Streak]:
     out = []
 
     for row in rows:
-        sid, title, desc, created_at, updated_at, ended_at, completed, days_completed = row
+        sid, title, desc, created_at, updated_at, ended_at, completed, days_completed, theme_name = row
 
         out.append(
             Streak(
@@ -51,6 +74,7 @@ def list_streaks(include_completed=True) -> list[Streak]:
                 ended_at=parse_due_date(ended_at) if ended_at else None,
                 completed=bool(completed),
                 days_completed=days_completed,
+                theme_name=theme_name,
             )
         )
 
@@ -84,24 +108,33 @@ def increment_streak(streak_id: int):
             """, (streak_id,))
         conn.commit()
 
-def update_streaks(streaks_id: int, title: str, desc: str):
+def decrement_streak(streak_id: int):
+    with get_conn() as conn:
+        conn.execute("""
+                UPDATE streaks
+                set days_completed = days_completed - 1
+                WHERE id = ?
+            """, (streak_id,))
+        conn.commit()
+
+def update_streaks(streaks_id: int, title: str, desc: str, theme_name: str):
     with get_conn() as conn:
         conn.execute(
             """
             UPDATE streaks
-            SET title = ?, description = ?, updated_at = datetime('now')
+            SET title = ?, description = ?, updated_at = datetime('now'), theme_name = ?
             WHERE id = ?
             """,
-            (title, desc, streaks_id),
+            (title, desc, theme_name, streaks_id),
         )
         conn.commit()
 
 
-def create_streaks(title: str, desc: str) -> int:
+def create_streaks(title: str, desc: str, theme_name: str = "default") -> int:
     if not title.strip():
         raise ValueError("Title is required.")
 
-    return add_streak(title.strip(), desc.strip())
+    return add_streak(title.strip(), desc.strip(), 0, date.today(), theme_name.strip())
 
 
 ''' ------------------------------- main streaks methods ------------------------------- '''
@@ -122,6 +155,7 @@ def uncomplete_streaks(streaks_id: int):
 def remove_streak(streak_id: int):
     delete_streak(streak_id)
 
+<<<<<<< HEAD
 def get_longest_streak(streak_id: int):
     pass
 
@@ -161,3 +195,19 @@ def get_longest_streak(streak_id: int):
 
     # return out
 
+=======
+def get_theme(theme_name):
+    return STREAK_THEMES.get(theme_name, STREAK_THEMES["default"])
+
+def get_naive_completed_days_for_month(self, days_completed):
+    today = date.today()
+    completed_days = set()
+
+    for i in range(days_completed):
+        streak_day = today - timedelta(days=i)
+
+        if streak_day.year == today.year and streak_day.month == today.month:
+            completed_days.add(streak_day.day)
+
+    return completed_days
+>>>>>>> 92c9cb8b7c442294045bfa694e7ed6ede71dbe97

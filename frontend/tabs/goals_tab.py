@@ -1,14 +1,19 @@
+import traceback
+from tkinter import messagebox
+
+import customtkinter as ctk
+
 from backend.routes import goal
 from backend.services import parse_due_date
-
-from tkinter import messagebox
-import traceback
-import customtkinter as ctk
+from frontend.components.glass_card import GlassCard
+from frontend.components.screen_frame import (
+    SCREEN_BG,
+)
 
 
 class GoalsTab(ctk.CTkFrame):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent, fg_color=SCREEN_BG)
         self.grid(row=0, column=0, sticky="nsew")
 
         self.parent = parent
@@ -70,7 +75,7 @@ class GoalsTab(ctk.CTkFrame):
         goals = goal.get_goals(include_completed=self.show_completed.get())
 
         for g in goals:
-            row = ctk.CTkFrame(self.goal_list_frame)
+            row = GlassCard(self.goal_list_frame)
             row.pack(fill="x", padx=6, pady=6)
 
             done_var = ctk.BooleanVar(value=g.completed)
@@ -101,6 +106,12 @@ class GoalsTab(ctk.CTkFrame):
             del_btn.pack(side="right", padx=10)
 
             self.goal_rows.append((g.id, done_var, row))
+
+    def refresh_goal_colors(self):
+        pass
+
+    def refresh_streak_colors(self):
+        pass
 
     def add_goal(self):
         act = self.goal_action_entry.get().strip()

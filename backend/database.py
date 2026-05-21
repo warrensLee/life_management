@@ -22,6 +22,22 @@ def execute_sql(conn, name, sql):
         print(sql)
         raise
 
+# to manage changes for the database we must be able to migrate old data -> new schema
+def column_exists(conn, table_name, column_name):
+    rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    return any(row[1] == column_name for row in rows)
+
+
+def migrate_db(conn):
+    if not column_exists(conn, "streaks", "theme_name"):
+        execute_sql(
+            conn,
+            "Add theme_name column to streaks",
+            "ALTER TABLE streaks ADD COLUMN theme_name TEXT DEFAULT 'default'"
+        )
+
+    conn.commit()
+
 def init_db():
     with get_conn() as conn:
         goals_sql = """
@@ -46,7 +62,8 @@ def init_db():
             days_completed INTEGER DEFAULT 0,
             created_at TEXT DEFAULT (datetime('now')),
             updated_at TEXT DEFAULT (datetime('now')),
-            ended_at TEXT
+            ended_at TEXT,
+            theme_name TEXT DEFAULT 'default'
         )
         """
         streaks_completions_sql = """       
@@ -61,6 +78,11 @@ def init_db():
 
         execute_sql(conn, "Create goals table", goals_sql)
         execute_sql(conn, "Create streaks table", streaks_sql)
+<<<<<<< HEAD
         execute_sql(conn, "Create streaks completions table", streaks_completions_sql)
+=======
+        migrate_db(conn)
+>>>>>>> 92c9cb8b7c442294045bfa694e7ed6ede71dbe97
 
         conn.commit()
+
