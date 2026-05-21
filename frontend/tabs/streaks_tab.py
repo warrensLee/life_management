@@ -159,6 +159,8 @@ class StreaksTab(ctk.CTkFrame):
 
             circle.grid(row=row, column=col, padx=2, pady=2)
 
+        return calendar_frame
+
     def streak_refresh(self):
         old_body = self.streak_body
 
@@ -230,10 +232,8 @@ class StreaksTab(ctk.CTkFrame):
             )
             del_btn.pack(side="right", anchor="n", padx=(0, 0), pady=(5, 0))
 
-            completed_days = streaks.get_naive_completed_days_for_month(self, s.days_completed)
-            self.build_calendar_view(right, completed_days)
-
-            #del_btn.pack(pady=(0, 4))
+            completed_days = streaks.get_naive_completed_days_for_month(s.days_completed)
+            calendar_frame = self.build_calendar_view(right, completed_days)
 
             # if there is no color selected, this is the default seleciton
             # it depends on complteion of the streak
@@ -271,7 +271,9 @@ class StreaksTab(ctk.CTkFrame):
                 "title": title,
                 "details": details,
                 "emoji": emoji_label,
-                "streak": s
+                "streak": s,
+                "calendar_parent": right,
+                "calendar_frame": calendar_frame,
             })
 
         old_body.destroy()
@@ -280,7 +282,6 @@ class StreaksTab(ctk.CTkFrame):
         self.streak_rows = new_rows
 
     def single_streak_refresh(self, streak_id, completed):
-        #default_color = "#E47F51" if completed else "#51E484"
         emoji_img = self.fire_emoji if completed else self.seedling_emoji
 
         for s in self.streak_rows:
@@ -312,6 +313,16 @@ class StreaksTab(ctk.CTkFrame):
 
                 s["emoji"].configure(image=emoji_img)
                 s["emoji"].image = emoji_img
+                s["calendar_frame"].destroy()
+
+                completed_days = streaks.get_naive_completed_days_for_month(
+                    s["streak"].days_completed
+                )
+
+                s["calendar_frame"] = self.build_calendar_view(
+                    s["calendar_parent"],
+                    completed_days
+                )
 
                 break
     

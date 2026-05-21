@@ -158,7 +158,7 @@ def remove_streak(streak_id: int):
 def get_theme(theme_name):
     return STREAK_THEMES.get(theme_name, STREAK_THEMES["default"])
 
-def get_naive_completed_days_for_month(self, days_completed):
+def get_naive_completed_days_for_month(days_completed):
     today = date.today()
     completed_days = set()
 
