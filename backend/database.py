@@ -66,9 +66,20 @@ def init_db():
             theme_name TEXT DEFAULT 'default'
         )
         """
+        streaks_completions_sql = """       
+        CREATE TABLE IF NOT EXISTS streak_completions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            streak_id INT NOT NULL,
+            completed_date TEXT NOT NULL,
+            UNIQUE (streak_id, completed_date),
+            FOREIGN KEY (streak_id) REFERENCES streaks(id) ON DELETE CASCADE
+        )
+        """
 
         execute_sql(conn, "Create goals table", goals_sql)
         execute_sql(conn, "Create streaks table", streaks_sql)
+        execute_sql(conn, "Create streaks completion table", streaks_completions_sql)
+
         migrate_db(conn)
 
         conn.commit()
