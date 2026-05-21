@@ -78,11 +78,9 @@ def init_db():
 
         execute_sql(conn, "Create goals table", goals_sql)
         execute_sql(conn, "Create streaks table", streaks_sql)
-<<<<<<< HEAD
-        execute_sql(conn, "Create streaks completions table", streaks_completions_sql)
-=======
+        execute_sql(conn, "Create streaks completion table", streaks_completions_sql)
+
         migrate_db(conn)
->>>>>>> 92c9cb8b7c442294045bfa694e7ed6ede71dbe97
 
         conn.commit()
 
