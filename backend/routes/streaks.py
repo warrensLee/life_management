@@ -121,3 +121,43 @@ def uncomplete_streaks(streaks_id: int):
 
 def remove_streak(streak_id: int):
     delete_streak(streak_id)
+
+def get_longest_streak(streak_id: int):
+    pass
+
+#def get_complete_days(streak_id: int):
+    # q = """
+    #     SELECT id, title, description,
+    #            created_at, updated_at, ended_at,
+    #            completed, days_completed
+    #     FROM streaks
+    # """
+
+    # if not include_completed:
+    #     q += " WHERE completed = 0"
+
+    # q += " ORDER BY id DESC"
+
+    # with get_conn() as conn:
+    #     rows = conn.execute(q).fetchall()
+
+    # out = []
+
+    # for row in rows:
+    #     sid, title, desc, created_at, updated_at, ended_at, completed, days_completed = row
+
+    #     out.append(
+    #         Streak(
+    #             id=sid,
+    #             title=title,
+    #             description=desc,
+    #             created_at=parse_due_date(created_at),
+    #             updated_at=parse_due_date(updated_at),
+    #             ended_at=parse_due_date(ended_at) if ended_at else None,
+    #             completed=bool(completed),
+    #             days_completed=days_completed,
+    #         )
+    #     )
+
+    # return out
+
