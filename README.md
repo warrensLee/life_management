@@ -34,14 +34,18 @@ life-management/
 │   ├── services.py
 │   ├── classes/
 │   │   ├── goal.py
-│   │   └── streaks.py
+│   │   ├── streaks.py
+│   │   └── streak_completions.py
 │   └── routes/
+│   │   ├── goal.py
+│   │   ├── streaks.py
+│   │   └── streak_completions.py
 │
 ├── core/
 │   ├── app.py
 │   ├── images/
-│   │   ├── emojis/
-│   │   └── misc/
+│   │   ├── emojis/...
+│   │   └── misc/...
 │   └── themes/
 │       ├── blue_theme.json
 │       └── green_theme.json

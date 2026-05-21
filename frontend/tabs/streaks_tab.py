@@ -8,6 +8,7 @@ import customtkinter as ctk
 from PIL import Image, ImageEnhance, ImageFilter
 
 from backend.routes import streaks
+from backend.routes import streak_completions
 from backend.routes.streaks import STREAK_THEMES
 from backend.services import parse_due_date
 from frontend.components.screen_frame import (
@@ -149,8 +150,8 @@ class StreaksTab(ctk.CTkFrame):
             circle = ctk.CTkLabel(
                 calendar_frame,
                 text=str(day),
-                width=22,
-                height=22,
+                width=15,
+                height=15,
                 corner_radius=11,
                 fg_color="#2ECC71" if completed else "#263345",
                 text_color="#FFFFFF" if completed else "#8A94A6",
@@ -231,8 +232,10 @@ class StreaksTab(ctk.CTkFrame):
                 command=lambda sid=s.id: self.delete_streak(sid)
             )
             del_btn.pack(side="right", anchor="n", padx=(0, 0), pady=(5, 0))
-
-            completed_days = streaks.get_naive_completed_days_for_month(s.days_completed)
+            
+            year = date.today().year
+            month = date.today().month
+            completed_days = streak_completions.get_completed_days(s.id, year, month)
             calendar_frame = self.build_calendar_view(right, completed_days)
 
             # if there is no color selected, this is the default seleciton
@@ -315,8 +318,10 @@ class StreaksTab(ctk.CTkFrame):
                 s["emoji"].image = emoji_img
                 s["calendar_frame"].destroy()
 
-                completed_days = streaks.get_naive_completed_days_for_month(
-                    s["streak"].days_completed
+                year = date.today().year
+                month = date.today().month
+                completed_days = streak_completions.get_completed_days(
+                    s["streak"].id, year, month
                 )
 
                 s["calendar_frame"] = self.build_calendar_view(

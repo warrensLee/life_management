@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from backend.database import get_conn
 from backend.classes.streaks import Streak
 from backend.services import parse_due_date
+from backend.routes import streak_completions
 
 ''' ------------------------------- streak themes ------------------------------- '''
 
@@ -107,6 +108,7 @@ def increment_streak(streak_id: int):
                 WHERE id = ?
             """, (streak_id,))
         conn.commit()
+        streak_completions.complete_streak(streak_id, date.today())
 
 def decrement_streak(streak_id: int):
     with get_conn() as conn:
@@ -116,6 +118,7 @@ def decrement_streak(streak_id: int):
                 WHERE id = ?
             """, (streak_id,))
         conn.commit()
+        streak_completions.uncomplete_streak(streak_id, date.today())
 
 def update_streaks(streaks_id: int, title: str, desc: str, theme_name: str):
     with get_conn() as conn:
